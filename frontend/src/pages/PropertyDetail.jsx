@@ -19,8 +19,37 @@ export default function PropertyDetail() {
   // Form liên hệ (SmartFormModal state)
   const [isModalOpen, setIsModalOpen] = useState(false);
   
+  // Quick Contact Form state
+  const [contactName, setContactName] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   // Media Viewer state
   const [selectedImg, setSelectedImg] = useState(null);
+
+  const handleQuickSubmit = async (e) => {
+    e.preventDefault();
+    if (!contactName || !contactPhone) {
+      alert('Vui lòng nhập đầy đủ họ tên và số điện thoại');
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await api('submitInquiry', {
+        customerName: contactName,
+        customerPhone: contactPhone,
+        note: `[Tư vấn mặt bằng] Yêu cầu tư vấn cho mặt bằng: ${property?.Street || 'Không rõ'} (ID: ${property?.PropertyID})`,
+        propertyId: property?.PropertyID || 'UNKNOWN'
+      });
+      alert('Gửi yêu cầu thành công! Chuyên viên sẽ sớm liên hệ với bạn.');
+      setContactName('');
+      setContactPhone('');
+    } catch (err) {
+      alert('Có lỗi xảy ra: ' + err.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     api('getPublicData')
@@ -223,7 +252,37 @@ export default function PropertyDetail() {
                 <p className="font-black text-2xl text-teal-800">0935.788.514</p>
               </div>
 
-              <div className="relative mb-8">
+              <form onSubmit={handleQuickSubmit} className="mb-6 text-left space-y-4">
+                <div>
+                  <input 
+                    type="text" 
+                    placeholder="Họ và tên của bạn" 
+                    required
+                    value={contactName}
+                    onChange={(e) => setContactName(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500/50 font-medium text-slate-800 transition-all"
+                  />
+                </div>
+                <div>
+                  <input 
+                    type="tel" 
+                    placeholder="Số điện thoại (Zalo)" 
+                    required
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-teal-500/50 font-medium text-slate-800 transition-all"
+                  />
+                </div>
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-slate-800 hover:bg-teal-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg shadow-slate-200 hover:shadow-teal-500/30 hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2 disabled:opacity-70"
+                >
+                  {isSubmitting ? 'Đang gửi...' : 'Yêu cầu tư vấn ngay'}
+                </button>
+              </form>
+
+              <div className="relative mb-6">
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-slate-100"></div>
                 </div>
@@ -233,10 +292,11 @@ export default function PropertyDetail() {
               </div>
               
               <button 
+                type="button"
                 onClick={openModal}
-                className="w-full bg-slate-800 hover:bg-teal-600 text-white font-bold py-5 px-6 rounded-2xl transition-all duration-300 shadow-lg shadow-slate-200 hover:shadow-teal-500/30 hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2 text-lg"
+                className="w-full bg-white border-2 border-teal-500 text-teal-600 font-bold py-3 px-6 rounded-xl transition-all duration-300 hover:bg-teal-50 active:scale-95 flex items-center justify-center gap-2"
               >
-                Yêu cầu tư vấn ngay
+                Gửi yêu cầu chi tiết khác
               </button>
             </div>
 
